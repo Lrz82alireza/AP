@@ -10,7 +10,6 @@ using namespace std;
 #define GROUP_A 1
 #define GROUP_B 2
 
-
 struct Basic
 {
     vector<Schedule> schedule;
@@ -187,15 +186,29 @@ bool is_course_in_day(Course &course, int week_day)
     return false;
 }
 
-bool is_this_class_used(Schedule &schedule, Course &course, int class_time)
+bool is_this_class_used(Basic &basic, Course &course, int class_time)
 {
+    for (auto it : basic.schedule)
+    {
+        for (auto sch_day : it.days)
+        {
+            for (auto crs_day : course.class_day)
+            {
+                if (sch_day == crs_day && it.time == class_time)
+                {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
 }
 
 bool is_course_used(Basic &basic, Course &course, int week_day, int group)
 {
     int counter = 0;
     for (auto i : basic.schedule)
-    {   
+    {
         if ((i.days[0] == week_day || i.days[1] == week_day) && i.course == course.name)
         {
             counter++;
@@ -208,7 +221,7 @@ bool is_course_used(Basic &basic, Course &course, int week_day, int group)
         if (counter >= 1)
             return true;
         break;
-    
+
     case GROUP_B:
         if (counter >= 2)
             return true;
@@ -223,7 +236,7 @@ bool is_course_valid(Basic &basic, Course &course, int class_time, int week_day,
         return false;
     if (is_course_used(basic, course, week_day, group))
         return false;
-    if () // is this class used?
+    if (is_this_class_used(basic, course, class_time))
         return false;
     if (is_course_on_time(course.time, basic.class_times, class_time))
         return true;
