@@ -9,6 +9,8 @@ using namespace std;
 #define MAX_CLASS_TIME 90
 #define GROUP_A 1
 #define GROUP_B 2
+#define WORK_WEEK_DAYS 5
+#define WORK_TIMES 3
 
 struct Basic
 {
@@ -257,8 +259,30 @@ vector<Course> find_valid_courses(Basic &basic, vector<Teacher> &teacher, vector
     return valid_courses;
 }
 
-void make_schedule(Basic &basic, vector<Teacher> &teacher, vector<Course> &course, int week_day = 0)
+void make_schedule_of_day(Basic &basic, vector<Teacher> &teacher, vector<Course> &course, int group, int week_day, int class_time = 0)
 {
+    if (class_time >= WORK_TIMES)
+        return;
+        
+    make_schedule_of_day(basic, teacher, course, group, week_day, class_time + 1);
+}
+
+void make_schedule_of_week(Basic &basic, vector<Teacher> &teacher, vector<Course> &course, int group, int week_day = 0)
+{
+    if (week_day >= WORK_WEEK_DAYS)
+        return;
+    make_schedule_of_day(basic, teacher, course, group, week_day);
+
+    make_schedule_of_week(basic, teacher, course, group, week_day + 1);
+}
+
+void make_schedule_of_group(Basic &basic, vector<Teacher> &teacher, vector<Course> &course, int group = GROUP_A)
+{
+    if (group != GROUP_A && group != GROUP_B)
+        return;
+    make_schedule_of_week(basic, teacher, course, group);
+
+    make_schedule_of_group(basic, teacher, course, group + 1);
 }
 
 int main()
