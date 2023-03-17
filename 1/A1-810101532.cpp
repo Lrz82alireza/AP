@@ -93,8 +93,6 @@ void best_day()
     string textword, fileword;
     int best_diary = 0, co1 = 0;
 
-    
-
     if (diary.size() == 1)
     {
         cout << diary[0][0] << '\n';
@@ -119,21 +117,21 @@ void best_day()
                     co2++;
                 }
             }
-            
+
             myfile.close();
         }
 
         // compare between former diary'word and new one
         if (co1 <= co2)
         {
+            if (co1 != co2)
+                best_diary = i;
             co1 = co2;
             co2 = 0;
-            best_diary = i;
         }
     }
     cout << diary[best_diary][0] << '\n';
     summary(diary[best_diary].back());
-    
 }
 
 // convert input to number
