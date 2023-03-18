@@ -546,7 +546,6 @@ void print_plan(Basic &basic, vector<Course> course)
                 break;
 
             cur_course = courses_name[counter];
-
         }
     }
 }
