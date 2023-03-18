@@ -49,13 +49,12 @@ struct Mix
     Course course;
 };
 
-void test(vector<Course> test)
+void test(vector<Course> test, int time)
 {
     for (auto i : test)
     {
         cout << i.name << endl;
-        cout << i.class_day[0] << " " << i.class_day[1] << endl;
-        cout << i.time->first << i.time->second << endl;
+        cout << time << endl;
     }
 }
 
@@ -134,48 +133,23 @@ void get_schedules(vector<Teacher> &teacher, vector<Course> &course, map<string,
     get_courses_schedule(course, week);
 }
 
-pair<int, int> time_plus(pair<int, int> course_time, int plus_minute = MAX_CLASS_TIME)
+int conver_to_minute(pair<int, int> time)
 {
-    pair<int, int> result = {course_time.first + (plus_minute / 60), course_time.second + (plus_minute % 60)};
-
-    if (result.second >= 60)
-    {
-        result.first++;
-        result.second -= 60;
-    }
-
+    int result = 0;
+    result += time.first * 60;
+    result += time.second;
     return result;
-}
-
-bool is_time1_before_time2(pair<int, int> time1, pair<int, int> time2)
-{
-    if (time1.first == time2.first && time1.second < time2.second)
-        return true;
-    if (time1.first < time2.second)
-        return true;
-    return false;
-}
-
-bool is_time1_equal_time2(pair<int, int> time1, pair<int, int> time2)
-{
-    if (time1.first == time2.first && time1.second == time2.second)
-        return true;
-    return false;
 }
 
 bool is_course_on_time(pair<int, int> course_time[2], map<int, pair<int, int>> class_times, int class_time)
 {
-    int class_hour = class_times[class_time].first,
-        class_minute = class_times[class_time].second;
-    pair<int, int> end_time = time_plus(course_time[0]);
-
-    if (is_time1_before_time2(end_time, course_time[1]))
-        return false;
-    if (!is_time1_before_time2(course_time[0], class_times[class_time]) &&
-        !is_time1_equal_time2(course_time[0], class_times[class_time]))
-        return false;
-
-    return true;
+    int course_start = conver_to_minute(course_time[0]);
+    int course_end = conver_to_minute(course_time[1]);
+    int class_start = conver_to_minute(class_times[class_time]);
+    int class_end = conver_to_minute(class_times[class_time + 3]);
+    if (course_start <= class_start && class_end <= course_end)
+        return true;
+    return false;
 }
 
 bool is_course_in_day(Course course, int week_day)
@@ -220,12 +194,12 @@ bool is_course_used(Basic basic, Course &course, int week_day, int group)
     switch (group)
     {
     case GROUP_A:
-        if (counter >= 1)
+        if (counter == GROUP_A)
             return true;
         break;
 
     case GROUP_B:
-        if (counter >= 2)
+        if (counter == GROUP_B)
             return true;
         break;
     }
@@ -278,11 +252,12 @@ bool had_this_class_time(Basic basic, Teacher teacher, Course valid_course, int 
     {
         for (auto schedule_day : i.days)
         {
-            for (auto course_day : valid_course.class_day)
-            {
-                if (schedule_day == course_day && i.time == class_time && i.teacher == teacher.name)
-                    return true;
-            }
+            if (schedule_day != valid_course.class_day[0] && schedule_day != valid_course.class_day[1])
+                continue;
+            if (i.time != class_time)
+                continue;
+            if (i.teacher == teacher.name)
+                return true;
         }
     }
     return false;
@@ -358,7 +333,7 @@ bool is_this_teacher_better(Teacher current_teacher, Teacher new_teacher)
     if (new_teacher.free_day.size() < current_teacher.free_day.size())
         return true;
     if (new_teacher.free_day.size() == current_teacher.free_day.size() &&
-        compare_alphabetically(current_teacher.name, new_teacher.name) == 1)
+        compare_alphabetically(new_teacher.name, current_teacher.name) == 1)
         return true;
     return false;
 }
@@ -392,7 +367,7 @@ vector<Mix> make_valid_mixes(Basic &basic, vector<Teacher> teacher, vector<Cours
         vector<Teacher> valid_teachers = find_valid_teachers(basic, teacher, i, class_time);
         if (valid_teachers.size() == 0)
             continue;
-
+        
         Teacher best_teacher = find_best_teacher(valid_teachers);
         valid_mixes.push_back(make_mix(best_teacher, i));
     }
@@ -422,7 +397,7 @@ Mix find_best_mix(vector<Mix> valid_mixes)
     {
         if (is_mix1_equal_mix2(i, best_mix))
             continue;
-        if (is_this_mix_better(best_mix, i))
+        if (is_this_mix_better(i, best_mix))
             best_mix = i;
     }
     return best_mix;
@@ -446,7 +421,6 @@ void make_schedule_of_class_time(Basic &basic, vector<Teacher> &teacher, vector<
     vector<Course> valid_courses = find_valid_courses(basic, teacher, course, class_time, group, week_day);
     if (valid_courses.size() == 0)
         return;
-    // test(valid_courses);
 
     vector<Mix> valid_mixes = make_valid_mixes(basic, teacher, valid_courses, class_time);
     if (valid_mixes.size() == 0)
@@ -554,6 +528,8 @@ void print_course_plan(Basic &basic, string courses_name)
 
 void print_plan(Basic &basic, vector<Course> course)
 {
+    cout << basic.schedule.size() << endl;
+
     vector<string> courses_name = find_courses_names(course);
     int counter = 0;
     string cur_course = courses_name[counter];
@@ -563,12 +539,14 @@ void print_plan(Basic &basic, vector<Course> course)
     {
         if (cur_course != i.course)
         {
-            print_course_plan(basic, cur_course);
-            cur_course = courses_name[counter];
+            print_course_plan(basic, i.course);
 
             counter++;
             if (counter == courses_name.size())
                 break;
+
+            cur_course = courses_name[counter];
+
         }
     }
 }
@@ -587,6 +565,10 @@ int main()
     class_times[1] = {9, 30};
     class_times[2] = {11, 30};
 
+    class_times[3] = {9, 0};
+    class_times[4] = {11, 0};
+    class_times[5] = {13, 0};
+
     vector<Teacher> teacher;
     vector<Course> course;
     vector<Schedule> schedule;
@@ -604,5 +586,5 @@ int main()
         cout << "////////////////////////////////" << endl;
     }
     */
-    // print_plan(basic, course);
+    print_plan(basic, course);
 }
