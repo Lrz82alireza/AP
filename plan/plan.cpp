@@ -170,7 +170,7 @@ Course find_best_course(vector<Course> valid_courses) //////////////////////////
     if (valid_courses.size() == 1)
         return valid_courses[0];
 
-    for (auto i = valid_courses.begin() + 1; i != valid_courses.end(); i++)
+    for (auto i = valid_courses.begin() + 1; i != valid_courses.end(); i++) //////////////////////////////////////////////
     {
         if (is_this_course_better()) // قراره چک کنه که کدومشون بهترن
         {
@@ -246,6 +246,72 @@ bool is_course_valid(Basic basic, Course &course, int class_time, int week_day, 
     return false;
 }
 
+bool has_this_course(Teacher teacher, Course valid_course)
+{
+    for (auto i : teacher.lesson)
+    {
+        if (i == valid_course.name)
+            return true;
+    }
+    return false;
+}
+
+bool has_courses_days(Teacher teacher, Course valid_course)
+{
+    int counter = 0;
+    for (auto i : valid_course.class_day)
+    {
+        for (auto j : teacher.free_day)
+        {
+            if (i == j)
+                counter++;
+        }
+    }
+
+    if (counter == MAX_COURSE_CLASS_DAY)
+        return true;
+    return false;
+}
+
+bool had_this_class_time(Basic basic, Teacher teacher, Course valid_course, int class_time)
+{
+    for (auto i : basic.schedule)
+    {
+        for (auto schedule_day : i.days)
+        {
+            for (auto course_day : valid_course.class_day)
+            {
+                if (schedule_day == course_day && i.time == class_time && i.teacher == teacher.name)
+                    return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool is_teacher_valid(Basic basic, Teacher teacher, Course valid_course, int class_time)
+{
+    if (!has_this_course(teacher, valid_course))
+        return false;
+    if (!has_courses_days(teacher, valid_course))
+        return false;
+    if (had_this_class_time(basic, teacher, valid_course, class_time))
+        return false;
+    return true;
+}
+
+vector<Teacher> find_valid_teachers(Basic basic, vector<Teacher> teacher, Course valid_course, int class_time)
+{
+    vector<Teacher> valid_teachers;
+    for (auto i : teacher)
+    {
+        if (is_teacher_valid(basic, i, valid_course, class_time))
+            valid_teachers.push_back(i);
+    }
+
+    return valid_teachers;
+}
+
 vector<Course> find_valid_courses(Basic &basic, vector<Teacher> &teacher, vector<Course> &course,
                                   int class_time, int group, int week_day = 0)
 {
@@ -263,7 +329,9 @@ void make_schedule_of_day(Basic &basic, vector<Teacher> &teacher, vector<Course>
 {
     if (class_time >= WORK_TIMES)
         return;
-        
+
+    //////////////////////////////////////////////////////// making schedule
+
     make_schedule_of_day(basic, teacher, course, group, week_day, class_time + 1);
 }
 
