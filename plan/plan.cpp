@@ -4,6 +4,7 @@
 #include <string>
 #include <cstring>
 #include <map>
+#include <algorithm>
 using namespace std;
 
 #define MAX_COURSE_CLASS_DAY 2
@@ -47,15 +48,6 @@ struct Mix
     Teacher teacher;
     Course course;
 };
-
-void test(vector<Course> test, int time)
-{
-    for (auto i : test)
-    {
-        cout << i.name << endl;
-        cout << time << endl;
-    }
-}
 
 void get_teacher_schedule(Teacher &teacher, map<string, int> week)
 {
@@ -160,24 +152,6 @@ bool is_course_in_day(Course course, int week_day)
     return false;
 }
 
-bool is_this_class_used(Basic basic, Course &course, int class_time)
-{
-    for (auto it : basic.schedule)
-    {
-        for (auto sch_day : it.days)
-        {
-            for (auto crs_day : course.class_day)
-            {
-                if (sch_day == crs_day && it.time == class_time)
-                {
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
-}
-
 bool is_course_used(Basic basic, Course &course, int week_day, int group)
 {
     int counter = 0;
@@ -209,8 +183,6 @@ bool is_course_valid(Basic basic, Course &course, int class_time, int week_day, 
     if (!is_course_in_day(course, week_day))
         return false;
     if (is_course_used(basic, course, week_day, group))
-        return false;
-    if (is_this_class_used(basic, course, class_time))
         return false;
     if (is_course_on_time(course.time, basic.class_times, class_time))
         return true;
@@ -526,9 +498,10 @@ void print_course_plan(Basic &basic, string courses_name)
 
 void print_plan(Basic &basic, vector<Course> course)
 {
-    cout << basic.schedule.size() << endl;
-
     vector<string> courses_name = find_courses_names(course);
+
+    sort(courses_name.begin(), courses_name.end());
+
     string cur_course = courses_name.front();
 
     bool did_find_course = false;
@@ -575,15 +548,5 @@ int main()
     Basic basic = {.schedule = schedule, .week = week, .class_times = class_times};
 
     make_plan(basic, teacher, course);
-    /*
-    for (auto i : basic.schedule)
-    {
-        cout << i.course << endl;
-        cout << i.teacher << endl;
-        cout << i.time << endl;
-        cout << i.days[0] << " " << i.days[1] << endl;
-        cout << "////////////////////////////////" << endl;
-    }
-    */
     print_plan(basic, course);
 }
