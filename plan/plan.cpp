@@ -13,7 +13,6 @@ using namespace std;
 #define WORK_WEEK_DAYS 5
 #define WORK_TIMES 3
 
-
 struct Teacher
 {
     string name;
@@ -57,7 +56,6 @@ void test(vector<Course> test, int time)
         cout << time << endl;
     }
 }
-
 
 void get_teacher_schedule(Teacher &teacher, map<string, int> week)
 {
@@ -367,7 +365,7 @@ vector<Mix> make_valid_mixes(Basic &basic, vector<Teacher> teacher, vector<Cours
         vector<Teacher> valid_teachers = find_valid_teachers(basic, teacher, i, class_time);
         if (valid_teachers.size() == 0)
             continue;
-        
+
         Teacher best_teacher = find_best_teacher(valid_teachers);
         valid_mixes.push_back(make_mix(best_teacher, i));
     }
@@ -531,22 +529,24 @@ void print_plan(Basic &basic, vector<Course> course)
     cout << basic.schedule.size() << endl;
 
     vector<string> courses_name = find_courses_names(course);
-    int counter = 0;
-    string cur_course = courses_name[counter];
-    print_course_plan(basic, cur_course);
+    string cur_course = courses_name.front();
 
-    for (auto i : basic.schedule)
+    bool did_find_course = false;
+
+    for (auto i : courses_name)
     {
-        if (cur_course != i.course)
+        did_find_course = false;
+        for (auto j : basic.schedule)
         {
-            print_course_plan(basic, i.course);
-
-            counter++;
-            if (counter == courses_name.size())
+            if (j.course == i)
+            {
+                print_course_plan(basic, i);
+                did_find_course = true;
                 break;
-
-            cur_course = courses_name[counter];
+            }
         }
+        if (!did_find_course)
+            cout << "Not Found\nNot Found" << endl;
     }
 }
 
